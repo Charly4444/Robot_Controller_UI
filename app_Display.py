@@ -153,10 +153,7 @@ class InitScreen(QMainWindow):
         self.navbar_layout = QHBoxLayout()
         self.init_button = QPushButton("Init")
         self.init_button.setEnabled(False)  # Disable init button on init screen
-        self.operate_button = QPushButton("Operate")
-        self.operate_button.clicked.connect(self.close)  # Close init screen on operate button click
         self.navbar_layout.addWidget(self.init_button)
-        self.navbar_layout.addWidget(self.operate_button)
         self.central_layout.addLayout(self.navbar_layout)
 
         # Central grid display
