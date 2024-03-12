@@ -1,19 +1,21 @@
-import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QPushButton, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QTextEdit, QGridLayout
-from PyQt5.QtCore import QObject, pyqtSignal
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QPushButton, QVBoxLayout, QHBoxLayout, QLineEdit, QGridLayout, QLabel, QTextEdit
+from PyQt5.QtCore import pyqtSignal
+# Supposons que "algo" est le module contenant "algorithmManager"
 from algo import algorithmManager as algorithm
+import sys
 
+# Main window class
 class MainWindow(QMainWindow):
+
     def DOROBOTTHING(self):
         print("You sent a command")
-    
     # ================================================================
         
     def __init__(self):
         super().__init__()
 
         self.setWindowTitle("Robot Controller")
-        self.setGeometry(100, 100, 600, 400)
+        self.setGeometry(50, 50, 640, 480)
 
         # Central widget
         self.central_widget = QWidget()
@@ -23,19 +25,18 @@ class MainWindow(QMainWindow):
         self.central_layout = QVBoxLayout()
         self.central_widget.setLayout(self.central_layout)
 
-        # Navbar
+        self.grid_layout = QGridLayout()
+
+        # Navbar with Init and Operate buttons
         self.navbar_layout = QHBoxLayout()
         self.init_button = QPushButton("Init")
         self.init_button.clicked.connect(self.open_init_screen)
+        self.init_button.setStyleSheet("QPushButton { background-color:#FF5733; color: black; border:2px solid black; border-radius:30px;padding:15px; min-width :15px;min-height:35px; border-style:outset; border-width:2px; font:bold 14px;}")
         self.operate_button = QPushButton("Operate")
-        self.operate_button.clicked.connect(self.operate_robot)
+        self.operate_button.setStyleSheet("QPushButton { background-color: #FFC300; color: black;border:2px solid black; border-radius:30px;padding:15px; min-width :15px;min-height:35px; border-style:outset; border-width:2px; font:bold 14px;}")
         self.navbar_layout.addWidget(self.init_button)
         self.navbar_layout.addWidget(self.operate_button)
         self.central_layout.addLayout(self.navbar_layout)
-
-        # Central grid display
-        self.grid_layout = QGridLayout()
-        self.central_layout.addLayout(self.grid_layout)
 
         # Text entry and send button
         self.text_entry_layout = QHBoxLayout()
@@ -48,23 +49,30 @@ class MainWindow(QMainWindow):
 
         # Initialize the boardArray to an 8x8 matrix of zeros
         self.boardArray = [
-                            [0, 0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0, 0],
-                        ]
-        
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+        ]
+
+        # Create an instance of InitScreen and connect signal
+        self.init_screen = InitScreen()
+        self.init_screen.initComplete.connect(self.update_grid)
+
         # Display the initial grid
         self.updateGrid()
 
+    def open_init_screen(self):
+        self.init_screen.show()
 
-    def initializeBoardArray(self):
-        # Reset the boardArray to an 8x8 matrix of zeros
-        self.boardArray = [[0] * 8 for _ in range(8)]
+    def update_grid(self, board_array):
+        # Update the boardArray with the received data
+        self.boardArray = board_array
+        # Update the grid display
         self.updateGrid()
 
     def updateGrid(self):
@@ -73,66 +81,37 @@ class MainWindow(QMainWindow):
             self.grid_layout.itemAt(i).widget().setParent(None)
 
         # Display grid of 8x8 buttons based on boardArray
+        self.grid_layout = QGridLayout()
         for i in range(8):
             for j in range(8):
-                value = self.boardArray[i][j]
-                button_text = "x" if value == 1 else "o"
+                button_text = "1" if self.boardArray[i][j] == 1 else "0"
                 button = QPushButton(button_text)
+                button.setFixedSize(40, 40)
+                if button_text == "1":
+                    button.setStyleSheet("QPushButton { background-color: green; border: 2px solid red; }")
+                else:
+                    button.setStyleSheet("QPushButton { border: 2px solid blue; }")
                 self.grid_layout.addWidget(button, i, j)
-        
-        # Create an instance of InitScreen
-        self.init_screen = InitScreen()
+        self.central_layout.addLayout(self.grid_layout)
 
-        # Connect the initComplete signal to updateGrid slot
-        self.init_screen.initComplete.connect(self.update_grid)
-
-    def open_init_screen(self):
-        # Show the init screen
-        self.init_screen.show()
-
-    def update_grid(self, board_array):
-        # Update the boardArray with the received data
-        self.boardArray = board_array
-
-        # Update the grid display
+    def send_message(self):
+        msg = self.text_entry.text()
+        newboardArray = algorithm(self.boardArray, msg)
+        self.boardArray = newboardArray
         self.updateGrid()
+
     # ======================= Robot Operations ============================
     def operate_robot(self):
         msg = self.text_entry.text()
         # Call operateRobot function with the message
         self.DOROBOTTHING()
 
-    # send message so it will be processed
-    def send_message(self):
-        msg = self.text_entry.text()
-        newboardArray = algorithm(self.boardArray,msg)
-        self.boardArray = newboardArray
-        self.update_grid(self.boardArray)
-    # =====================================================================
-    
-    def init_grid_display(self):
-        # Clear any existing items in grid layout
-        for i in reversed(range(self.grid_layout.count())):
-            self.grid_layout.itemAt(i).widget().setParent(None)
-        # Display grid of 8x8 buttons
-        for i in range(8):
-            for j in range(8):
-                button = QPushButton("0")
-                button.clicked.connect(self.toggle_button)  # Connect button click signal to toggle_button
-                self.grid_layout.addWidget(button, i, j)
-
-    def toggle_button(self):
-        # Toggle the value of the clicked button (0 -> 1, 1 -> 0)
-        sender_button = self.sender()
-        if sender_button.text() == "0":
-            sender_button.setText("1")
-        else:
-            sender_button.setText("0")
 
 # ===============  END OF MAIN CLASS, BEGIN OF INIT WINDOW CLASS ==========
 
+# Init screen class
 class InitScreen(QMainWindow):
-    # Define a signal to indicate that initialization is complete
+     # Define a signal to indicate that initialization is complete
     initComplete = pyqtSignal(list)
 
     def __init__(self):
@@ -149,49 +128,44 @@ class InitScreen(QMainWindow):
         self.central_layout = QVBoxLayout()
         self.central_widget.setLayout(self.central_layout)
 
-        # Navbar
-        self.navbar_layout = QHBoxLayout()
-        self.init_button = QPushButton("Init")
-        self.init_button.setEnabled(False)  # Disable init button on init screen
-        self.navbar_layout.addWidget(self.init_button)
-        self.central_layout.addLayout(self.navbar_layout)
-
         # Central grid display
         self.grid_layout = QGridLayout()
         self.central_layout.addLayout(self.grid_layout)
-        
-        # Initialize button
-        self.initialize_button = QPushButton("Initialize")
-        self.initialize_button.clicked.connect(self.set_board_array)
-        self.central_layout.addWidget(self.initialize_button)
 
-        # Clear any existing items in grid layout and show blanks button
-        for i in reversed(range(self.grid_layout.count())):
-            self.grid_layout.itemAt(i).widget().setParent(None)
         # Display grid of 8x8 buttons
         for i in range(8):
             for j in range(8):
                 button = QPushButton("0")
-                button.clicked.connect(self.toggle_button)  # Connect button click signal to toggle_button
+                button.setStyleSheet("QPushButton { border: 2px solid blue; }")
+                button.clicked.connect(lambda _, x=i, y=j: self.toggle_button(x, y))
                 self.grid_layout.addWidget(button, i, j)
 
+    def init_grid_display(self):
+        # Clear any existing items in grid layout
+        for i in reversed(range(self.grid_layout.count())):
+            widget_to_remove = self.grid_layout.itemAt(i).widget()
+            if widget_to_remove:
+                self.grid_layout.removeWidget(widget_to_remove)
+                widget_to_remove.setParent(None)
+        # Display grid of 8x8 buttons
+        for i in range(8):
+            for j in range(8):
+                button = QPushButton("0")  
+                button.setFixedSize(40, 40)
+                button.clicked.connect(lambda _, x=i, y=j: self.toggle_button(x, y))
+                self.grid_layout.addWidget(button, i, j)
 
-    def toggle_button(self):
-        # Toggle the value of the clicked button (0 -> 1, 1 -> 0)
-        sender_button = self.sender()
-        if sender_button.text() == "0":
-            sender_button.setText("1")
-        else:
-            sender_button.setText("0")
-
-    def set_board_array(self):
-        # Initialize the boardArray based on button values
-        self.boardArray = [[int(self.grid_layout.itemAtPosition(i, j).widget().text()) for j in range(8)] for i in range(8)]
-        self.close()  # Close the init screen
-
-        # Emit the initComplete signal with the updated boardArray
+    def toggle_button(self, i, j):
+        button = self.grid_layout.itemAtPosition(i, j).widget()
+        current_text = button.text()
+        new_text = "1" if current_text == "0" else "0"
+        button.setText(new_text)
+        button.setStyleSheet("QPushButton { background-color: green; border: 2px solid red; }" if new_text == "1" else "QPushButton { border: 2px solid blue; }")
+        self.boardArray = [[int(self.grid_layout.itemAtPosition(x, y).widget().text()) for y in range(8)] for x in range(8)]
         self.initComplete.emit(self.boardArray)
-        
+
+
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = MainWindow()
