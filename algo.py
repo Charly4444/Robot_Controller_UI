@@ -46,11 +46,12 @@ def algorithmManager(boardArray, commandmsg):
     parts = command.split(',')
     modified_parts = [parts[0]] + ['1,' + part for part in parts[1:]]  # Insert '1' before each part except the command itself
     fullcommand = ','.join(modified_parts)  #now like; Move,1,2,1,5 -> for example
-    # send the fullcommand
+    # # send the fullcommand
     response = tcpSENDMsg(fullcommand)
-
+    
     # ===================================================================
-
+    # hard set (for Test)
+    # response = "Done\r\n"
 
 
     #4 CHECK RESPONSE AND UPDATE BOARD
