@@ -1,8 +1,30 @@
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QPushButton, QVBoxLayout, QHBoxLayout, QLineEdit, QGridLayout, QLabel, QTextEdit
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QPushButton, QVBoxLayout, QHBoxLayout, QLineEdit, QGridLayout, QLabel
 from PyQt5.QtCore import pyqtSignal
 # Supposons que "algo" est le module contenant "algorithmManager"
 from algo import algorithmManager as algorithm
 import sys
+
+
+# Custom widget class containing a button and a label
+class ButtonWithLabel(QWidget):
+    def __init__(self, button_text, label_text):
+        super().__init__()
+
+        layout = QVBoxLayout()
+        
+        self.label = QLabel(label_text)
+
+        self.button = QPushButton(button_text)
+        self.button.setFixedSize(20, 20)
+        if button_text == "1":
+            self.button.setStyleSheet("QPushButton { background-color: green; border: 2px solid red; }")
+        else:
+            self.button.setStyleSheet("QPushButton { border: 2px solid blue; }")
+        
+        layout.addWidget(self.label)
+        layout.addWidget(self.button)
+        
+        self.setLayout(layout)
 
 # Main window class
 class MainWindow(QMainWindow):
@@ -82,20 +104,17 @@ class MainWindow(QMainWindow):
 
         # Display grid of 8x8 buttons based on boardArray
         self.grid_layout = QGridLayout()
-        for i in range(8):
+        for i in reversed(range(8)):
             for j in range(8):
                 button_text = "1" if self.boardArray[i][j] == 1 else "0"
-                button = QPushButton(button_text)
-                button.setFixedSize(40, 40)
-                if button_text == "1":
-                    button.setStyleSheet("QPushButton { background-color: green; border: 2px solid red; }")
-                else:
-                    button.setStyleSheet("QPushButton { border: 2px solid blue; }")
-                self.grid_layout.addWidget(button, i, j)
+                label_text = str(i*8 + j + 1)
+                button_widget = ButtonWithLabel(button_text, label_text)
+                self.grid_layout.addWidget(button_widget, 7 - i, j)  # Add button to the reversed row index
         self.central_layout.addLayout(self.grid_layout)
 
     def send_message(self):
         msg = self.text_entry.text()
+        # print(msg)
         newboardArray = algorithm(self.boardArray, msg)
         self.boardArray = newboardArray
         self.updateGrid()
@@ -133,27 +152,27 @@ class InitScreen(QMainWindow):
         self.central_layout.addLayout(self.grid_layout)
 
         # Display grid of 8x8 buttons
-        for i in range(8):
+        for i in reversed(range(8)):
             for j in range(8):
                 button = QPushButton("0")
                 button.setStyleSheet("QPushButton { border: 2px solid blue; }")
-                button.clicked.connect(lambda _, x=i, y=j: self.toggle_button(x, y))
-                self.grid_layout.addWidget(button, i, j)
+                button.clicked.connect(lambda _, x=7-i, y=j: self.toggle_button(x, y))
+                self.grid_layout.addWidget(button, 7-i, j)  #about placement
 
-    def init_grid_display(self):
-        # Clear any existing items in grid layout
-        for i in reversed(range(self.grid_layout.count())):
-            widget_to_remove = self.grid_layout.itemAt(i).widget()
-            if widget_to_remove:
-                self.grid_layout.removeWidget(widget_to_remove)
-                widget_to_remove.setParent(None)
+    # def init_grid_display(self):
+    #     # Clear any existing items in grid layout
+    #     for i in reversed(range(self.grid_layout.count())):
+    #         widget_to_remove = self.grid_layout.itemAt(i).widget()
+    #         if widget_to_remove:
+    #             self.grid_layout.removeWidget(widget_to_remove)
+    #             widget_to_remove.setParent(None)
         # Display grid of 8x8 buttons
-        for i in range(8):
-            for j in range(8):
-                button = QPushButton("0")  
-                button.setFixedSize(40, 40)
-                button.clicked.connect(lambda _, x=i, y=j: self.toggle_button(x, y))
-                self.grid_layout.addWidget(button, i, j)
+        # for i in reversed(range(8)):
+        #     for j in range(8):
+        #         button = QPushButton("0")  
+        #         button.setFixedSize(40, 40)
+        #         button.clicked.connect(lambda _, x=7-i, y=j: self.toggle_button(x, y))
+        #         self.grid_layout.addWidget(button, i, j)
 
     def toggle_button(self, i, j):
         button = self.grid_layout.itemAtPosition(i, j).widget()
@@ -161,7 +180,7 @@ class InitScreen(QMainWindow):
         new_text = "1" if current_text == "0" else "0"
         button.setText(new_text)
         button.setStyleSheet("QPushButton { background-color: green; border: 2px solid red; }" if new_text == "1" else "QPushButton { border: 2px solid blue; }")
-        self.boardArray = [[int(self.grid_layout.itemAtPosition(x, y).widget().text()) for y in range(8)] for x in range(8)]
+        self.boardArray = [[int(self.grid_layout.itemAtPosition(x, y).widget().text()) for y in range(8)] for x in reversed(range(8))]
         self.initComplete.emit(self.boardArray)
 
 
