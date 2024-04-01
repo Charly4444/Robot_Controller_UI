@@ -1,6 +1,6 @@
 import re
 from tcp_sendmsg import send_message_and_receive_response as tcpSENDMsg
-
+import time
 """
 This Code is part of the RobotArm Controller v1.0 project the key function is
 to recieve a boardArray[] and commandMsg and return an Updated boardArray[]
@@ -46,30 +46,31 @@ def algorithmManager(boardArray, commandmsg):
     parts = command.split(',')
     modified_parts = [parts[0]] + ['1,' + part for part in parts[1:]]  # Insert '1' before each part except the command itself
     fullcommand = ','.join(modified_parts)  #now like; Move,1,2,1,5 -> for example
-    # # send the fullcommand
+
+    # send the fullcommand
     response = tcpSENDMsg(fullcommand)
     
     # ===================================================================
-    # hard set (for Test)
+    # # hard set (for Test)
     # response = "Done\r\n"
 
 
     #4 CHECK RESPONSE AND UPDATE BOARD
     # ===================================================================
     if response == "Done\r\n":
-        print("You Moved a Piece")
+        # print("You Moved a Piece")
         # now call is successfull, update board
         print('updating the board!!!')
         board[start_row][start_col] = 0
         board[end_row][end_col] = 1
-
-        print("Updated board:")
+        time.sleep(0.5)       #some delay
+        # print("Updated board:")
     else:
         print("An error occurred:", response)
     # ================================================
-    # we can also see what board looks like on console
-    for row in board:
-        print(' '.join('x' if cell == 1 else 'o' for cell in row))
+    # # we can also see what board looks like on console
+    # for row in board:
+    #     print(' '.join('x' if cell == 1 else 'o' for cell in row))
     # ================================================
     
     return board    #board array is returned
